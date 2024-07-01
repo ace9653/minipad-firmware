@@ -32,7 +32,7 @@ Here is a list of features that are both planned and available:
 - Software-based low pass filter for analog stability
 - Configurable keychar pressed upon key interaction
 - Serial communication protocol for configuration
-- A command-line tool for configuration, [minitool](https://github.com/minipadkb/minitool)
+- UI application for configuration, [minitility](https://github.com/minipadkb/minitility)
 
 Planned Features 🗒️
 -
@@ -41,23 +41,23 @@ Planned Features 🗒️
 
 # Installation ⚡
 
-To flash this firmware on your minipad or other RP2040 board, please refer to our [firmware installation guide](https://minipadkb.github.io/minipad-wiki/docs/minipad/install-firmware). In there, you can find the instructions on how to initially load the firmware on the keypad, and how to update it later on.
+To flash this firmware on your minipad or other RP2040 board, please refer to our [firmware installation guide](https://minipad.minii.moe/docs/minipad/install-firmware). In there, you can find the instructions on how to initially load the firmware on the keypad, and how to update it later on.
 
 # Setup for development 💻
 
 Setting up this project is really simple. The repository is set up using PlatformIO, an IDE in form of an extension for Visual Studio Code.
 You can find a download link for Visual Studio Code [here](https://code.visualstudio.com/). In there, search and install the extension `PlatformIO`.
 
-After that is done, clone the repository with `git clone https://github.com/minipadkb/minipad-firmware` and open the cloned folder using Visual Studio Code. PlatformIO will perform an installation of all dependencies for this project (Arduino-Pico framework, various drivers, ...). This might take up some time, depending on your network connection.
+After that is done, clone the repository with `git clone https://github.com/Lep19/minipad-firmware-box-controller` and open the cloned folder using Visual Studio Code. PlatformIO will perform an installation of all dependencies for this project (Arduino-Pico framework, various drivers, ...). This might take up some time, depending on your network connection.
 
 If you are not familiar with the usage of PlatformIO, a Quick Start guide can be found [here](https://docs.platformio.org/en/stable/integration/ide/vscode.html).
 
-Note: Uploading the firmware only works if the micro controller is set into bootloader mode. This can be done using the BOOTSEL button on development boards or setting the minipad into bootloader mode/flashing directly via minitool. Help on the latter can be found [here](https://github.com/minipadkb/minitool?tab=readme-ov-file#usage).
+Note: Uploading the firmware only works if the micro controller is set into bootloader mode. This can be done using the BOOTSEL button on development boards or setting the minipad into bootloader mode via minitility. A guide on the latter can be found [here](https://minipad.minii.moe/docs/minitility/get-started).
 
 # Minipad Serial Protocol (MSP) 🔗
 
 The firmware is being configured and accessed from the host device via Serial communication at a baud rate of 115200.
-There is a command-line utility tool called "minitool" for communicating with the firmware. You can find the git repository [here](https://github.com/minipadkb/minitool).
+We are working on a web-based UI application called "minitility" for communicating with the firmware. You can find the git repository [here](https://github.com/minipadkb/minitility).
 
 All data sent via the serial interface is being interpreted as a command with the following syntax:
 `command arg0 arg1 arg2 ...`. The command and it's arguments are split by whitespaces, ending with a newline character.
@@ -92,9 +92,9 @@ Here is a list of commands and examples for them:
 *Description*: Sets the name of the minipad, used to distinguish different devices visually.
 
 *Command*: `out`</br>
-*Syntax*: `out`</br>
-*Example*: `out`</br>
-*Description*: Returns the sensor values and magnet distance of all Hall Effect keys.
+*Syntax*: `out [bool]`</br>
+*Example*: `out true`, `out 0`, `out`</br>
+*Description*: Enables/Disables the output mode. The output mode writes the sensor values to the serial monitor. If no parameter is specified, the values are written once.
 
 *Command*: `echo` (debug-exclusive)</br>
 *Syntax*: `echo <string>`</br>

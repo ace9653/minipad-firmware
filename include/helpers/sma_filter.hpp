@@ -5,6 +5,8 @@
 class SMAFilter
 {
 public:
+    SMAFilter() {}
+
     // Initialize the SMAFilter instance with the specified sample exponent.
     // (1 = 1 sample, 2 = 4 samples, 3 = 8 samples, ...)
     SMAFilter(uint8_t samplesExponent)

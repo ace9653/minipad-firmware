@@ -27,15 +27,15 @@ private:
     {
         Configuration config;
 
-        // Populate the Hall Effect keys array with the correct amount of Hall Effect keys.
-        // Assign the key char from z downwards (z, y, x, w, v, ...). After 26 keys, stick to an 'a' key to not overflow.
+        // Populate the hall effect keys array with the correct amount of hall effect keys.
         for (uint8_t i = 0; i < HE_KEYS; i++)
-            config.heKeys[i] = HEKeyConfig(i >= 26 ? 'a' : (char)('z' - i));
+            config.heKeys[i] = HEKey(i, 0);
 
+        for (uint8_t i = 0; i < ADC_KEYS; i++)
+           config.heKeys[i+HE_KEYS] = HEKey(i+HE_KEYS, 1);
         // Populate the digital keys array with the correct amount of digital keys.
-    // Assign the key char from a forwards (a, b, c, d, e, ...). After 26 keys, stick to an 'z' key to not overflow.
         for (uint8_t i = 0; i < DIGITAL_KEYS; i++)
-            config.digitalKeys[i] = DigitalKeyConfig(i >= 26 ? 'z' : (char)('a' + i));
+            config.digitalKeys[i] = DigitalKey(i);
 
         return config;
     };
