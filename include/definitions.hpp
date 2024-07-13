@@ -64,7 +64,7 @@
 
 // The travel distance of the switches, where 1 unit equals 0.01mm. This is used to map the values properly to
 // guarantee that the unit for the numbers used across the firmware actually matches the milimeter metric.
-#define TRAVEL_DISTANCE_IN_0_01MM 400
+#define TRAVEL_DISTANCE_IN_0_01MM 350
 
 // Uncomment this line if the sensor readings go up when the key is being pressed down.
 // By default, the firmware is made to handle the readings going down and not up.
@@ -75,28 +75,62 @@
 // This millisecond delay is the minimum time between button presses for the HID signal to send to the host device.
 #define DIGITAL_DEBOUNCE_DELAY 50
 
+//SPI Pins
+//Top 3 are shared between all ADC's, the CS ones are individual lines.
+//NOTE: If you edit this, you must change the digital pin code or the SPI communication will override some of your pins
+//NOTE: SPI has limited pins for clock and sending/recieving, but the CS pins can be anything if you adjust digital pins. See Pico pinout for details.
+#define pin_SPI0RX 0
+#define pin_SPI0SCK 2
+#define pin_SPI0TX 3
+//NOTE: The number of ADC's will change how much of these CS pins are used, and thus where the digital keys start.
+#define pin_SPI0CS1 1
+#define pin_SPI0CS2 4
+#define pin_SPI0CS3 5
+#define pin_SPI0CS4 6
+
+//pollrate in mhz
+//5000 is the max for mcp3008
+#define SPI_POLLRATE 3000
+
+//NOTE: We want 1 ADC KEY to return 1, 8 keys to return 1, 9 keys to return 2
+#define TOTAL_EXT_ADCS (EXT_ADC_KEYS+7)/8
+
+//ADCs other than MCP3008 not supported due to needing different buffer read/writes, but just in case
+#define EXT_ADC_CHANNELS 8
+
+//Since CS1 is GPIO 1, the offset is 4 when theres 1 ADC, and works out afterwards
+#if TOTAL_EXT_ADCS > 0
+#define EXT_ADC_PIN_OFFSET 3 + TOTAL_EXT_ADCS
+#endif
+//If there's no ADCs leave digital keys alone
+#if TOTAL_EXT_ADCS == 0
+#define EXT_ADC_PIN_OFFSET 0
+#endif
+
+//TODO: setup a dual core for SPI's and faster polling on non external ADc controlled inputs
+
 // Macro for getting the hall effect sensor pin of the specified key index. The pin order is being swapped here,
 // meaning on a 3-key device the pins are 28, 27 and 26. This macro has to be adjusted, depending on how the PCB
 // and hardware of the device using this firmware has been designed. The A0 constant is 26 in the RP2040 environment.
 // NOTE: By the uint8 datatype, the amount of keys is limited to 255.
-// NOTE: By the RP2040, the amount of analog pins (and therefore keys) is limited o 4.
-#define HE_PIN(index) A0 + HE_KEYS - index - 1
+// NOTE: By the RP2040, the amount of analog pins (and therefore keys) is limited to 4.
+#define INT_ADC_PIN(index) A0 + INT_ADC_KEYS - index - 1
 
 // Macro for getting the pin of the specified index of the digital key. The pin order is swapped here, meaning
 // the first digital key is on DIGITAL_KEYS - 1, the second on DIGITAL_KEYS - 2, and so on.
 // For 3 digital keys, this would mean that the keys 1, 2 and 3 are bound to the pins 2, 1 and 0 respectively.
 // NOTE: This way, the amount of keys is limited to 26 since the 27th key overlaps with the first analog port, 26.
-#define DIGITAL_PIN(index) 0 + DIGITAL_KEYS - index - 1
+#define DIGITAL_PIN(index) 0 + DIGITAL_KEYS - index - 1 + EXT_ADC_PIN_OFFSET
 
 // Add a compiler error if the firmware is being tried to built with more than the supported 4 keys.
 // (only 4 ADC pins available)
-#if HE_KEYS > 4
-#error As of right now, the firmware only supports up to 4 hall effect keys.
+#if INT_ADC_KEYS > 4
+#error As of right now, the firmware only supports up to 4 hall effect keys natively. For additional hall effect keys you need to use an external ADC such as the MCP 3008.
 #endif
 
-// Add a compiler error if the firmware is being tried to built with more than the supported 26 digital keys.
+// Add a compiler error if the firmware is being tried to built with more than the supported 26 digital keys minus the pins occupied by ADCs
 // (limited amount of ports)
-#if DIGITAL_KEYS > 26
+#if DIGITAL_KEYS > 26 - EXT_ADC_PIN_OFFSET
 #error As of right now, the firmware only supports up to 26 digital keys.
 #endif
 
@@ -104,3 +138,5 @@
 #ifndef DEV
 #define DEV 0
 #endif
+
+#define HE_KEYS INT_ADC_KEYS + EXT_ADC_KEYS

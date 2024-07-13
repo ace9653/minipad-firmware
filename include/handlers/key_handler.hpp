@@ -14,8 +14,10 @@ public:
     KeyHandler()
     {
         // Assign indicies and their corresponding HEKeyConfig to all Hall Effect keys.
+        //ADC keys are hall effect keys at the end of the index
         for (uint8_t i = 0; i < HE_KEYS; i++)
             heKeys[i] = HEKey(i, &ConfigController.config.heKeys[i]);
+
 
         // Assign indicies and their corresponding DigitalKeyConfig to all digital keys.
         for (uint8_t i = 0; i < DIGITAL_KEYS; i++)
@@ -24,6 +26,7 @@ public:
 
     void handle();
     bool outputMode;
+    int findCSPin(uint8_t adc);
     HEKey heKeys[HE_KEYS];
     DigitalKey digitalKeys[DIGITAL_KEYS];
 

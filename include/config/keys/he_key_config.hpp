@@ -10,7 +10,6 @@ struct HEKeyConfig : KeyConfig
     // Default constructor for the HEKeyConfig struct for initializing the arrays in the Configuration struct.
     HEKeyConfig() : KeyConfig('\0') {}
 
-    // Initialize with the specified key char.
     HEKeyConfig(char keyChar) : KeyConfig(keyChar) {}
 
     // Bool whether rapid trigger is enabled or not.
@@ -30,4 +29,6 @@ struct HEKeyConfig : KeyConfig
 
     // The value below which the key is no longer pressed and rapid trigger is no longer active in rapid trigger mode.
     uint16_t upperHysteresis = (uint16_t)(TRAVEL_DISTANCE_IN_0_01MM * 0.675);
+
+    //uint8_t adcIndex;
 };

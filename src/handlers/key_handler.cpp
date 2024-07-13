@@ -4,6 +4,12 @@
 #include "handlers/serial_handler.hpp"
 #include "helpers/string_helper.hpp"
 #include "definitions.hpp"
+#include <hardware/spi.h>
+#include <bitset>
+#include <cstring>
+#include <string>
+#include <iostream>
+
 
 /*
    Explanation of the Rapid Trigger Logic
@@ -50,6 +56,68 @@
    Step 3: Apply the dynamic travel distance checks, the core of the Rapid Trigger feature
    Step 4: Depending on whether the key is pressed or not, remember the lowest/highest peak achieved
 */
+
+
+int KeyHandler::findCSPin (uint8_t adc)
+{
+    switch(adc)
+    {
+        case(1):
+            return pin_SPI0CS1;
+        case(2):
+            return pin_SPI0CS2;
+        case(3):
+            return pin_SPI0CS3;
+        case(4):
+            return pin_SPI0CS4;
+        //should never happen
+        default:
+            break;
+
+    }
+    return pin_SPI0CS1;
+}
+
+
+ //interface with external adc MCP 3008
+extern "C" int externalADCRead(uint8_t totalIndex) {
+    //byte 1 sends the start bit to be single and formats return bits
+    uint8_t configByte;
+    const uint8_t initializeByte = {0b00000001};
+    /*                 Single channel
+                       |Config Bits D2
+                       ||           D1
+                       |||          D0
+                       ||||Don't Care, put a 1 here so its visible
+    */
+    configByte = {0b10000000};
+    //configBits[2] = 0b0000000;
+
+
+    uint8_t index = totalIndex - INT_ADC_KEYS;
+    uint8_t channel = index % EXT_ADC_CHANNELS;
+    uint8_t adc = (index / 8) + 1;
+    uint8_t cs = KeyHandler.findCSPin(adc);
+
+    //shift channel bits over to line up with config bits
+    configByte = configByte | (channel << 4);
+
+    //data gets written here
+    uint8_t buf[1];
+    //could just override the initial buffer but this should keep things clear if swapping to a different ADC
+    uint8_t garbage[0];
+
+    gpio_put(cs, 0);
+    //first write initializes spi
+    spi_read_blocking(spi0, initializeByte, garbage, 1);
+    //second write sends config and recieves data
+    spi_read_blocking(spi0, configByte, buf, 2);
+    uint16_t tempValue = ((buf[0] & 0b00000011) << 8 | buf[1]);
+    tempValue = tempValue << 2; //shift 10 bit output over 2 so its 12 bit
+    gpio_put(cs, 1);
+
+    return tempValue;
+}
 
 void KeyHandler::handle()
 {
@@ -102,7 +170,12 @@ void KeyHandler::updateSensorBoundaries(HEKey &key)
 void KeyHandler::scanHEKey(HEKey &key)
 {
     // Read the value from the port of the specified key and run it through the SMA filter.
-    key.rawValue = key.filter(analogRead(HE_PIN(key.index)));
+    // If the key has an associated ADC index, run the ADC read instead
+    //send the key index instead of the pin channel for ext adc
+    if (key.index >= (INT_ADC_KEYS))
+    key.rawValue = key.filter(externalADCRead(key.index));
+
+    //else key.rawValue = key.filter(analogRead(INT_ADC_PIN(key.index)));
 
     // Invert the value if the definition is set since in rare fields of application the sensor
     // is mounted the other way around, resulting in a different polarity and inverted sensor readings.
@@ -235,3 +308,6 @@ void KeyHandler::setPressedState(Key &key, bool pressed)
     // Update the pressed value state.
     key.pressed = pressed;
 }
+
+
+
